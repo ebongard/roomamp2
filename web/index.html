@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <title> RoomAmp 2 control</title>
+
+        <link rel="stylesheet" href="css/jquery.mobile-1.3.1.min.css" />
+        <link rel="stylesheet" href="css/my.css" />
+
+        <script src="js/jquery-1.7.2.min.js"></script>
+        <script src="js/jquery.mobile-1.3.1.min.js"></script>
+        <script src="js/main.js"></script>
+    </head>
+    <body>
+        <!-- Home -->
+        <div data-role="page" id="page1">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>
+                    RoomAmp2 control
+                </h3>
+            </div>
+            <div data-role="content">
+                <div data-role="fieldcontain">
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <legend>
+                            Source:
+                        </legend>
+                        <input id="radio1" name="Source" value="src0" type="radio" onclick="updateDevice('','LISTEN SOURCE',0,false)"/>
+                        <label for="radio1">
+                            0
+                        </label>
+                        <input id="radio2" name="Source" value="src1" type="radio" onclick="updateDevice('','LISTEN SOURCE',1,false)"/>
+                        <label for="radio2">
+                            1
+                        </label>
+                        <input id="radio3" name="Source" value="src2" type="radio" onclick="updateDevice('','LISTEN SOURCE',2,false)"/>
+                        <label for="radio3">
+                            2
+                        </label>
+                        <input id="radio4" name="Source" value="src3" type="radio" onclick="updateDevice('','LISTEN SOURCE',3,false)"/>
+                        <label for="radio4">
+                            3
+                        </label>
+                    </fieldset>
+                </div>
+                <div data-role="fieldcontain1">
+                    <label for="slider1">
+                        Volume
+                    </label>
+                    <input id="slider1" type="range" name="slider1" value="50" min="0" max="100" data-highlight="true" />
+
+                </div>
+                <div data-role="fieldcontain2">
+                    <label for="slider2">
+                        Balance
+                    </label>
+                    <input id="slider2" type="range" name="slider2" value="0" min="-10" max="10" data-highlight="false" />
+                </div>
+                <div data-role="fieldcontain3">
+                    <label for="toggleswitch1">
+                        Mute
+                    </label>
+                    <select name="toggleswitch1" id="toggleswitch1" data-theme="" data-role="slider">
+                        <option value="off">
+                            Off
+                        </option>
+                        <option value="on">
+                            On
+                        </option>
+                    </select>
+                </div>
+            </div>
+                <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="page2">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>
+                    Settings
+                </h3>
+            </div>
+                <div id="deviceList"></div>
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="page3">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>
+                    About
+                </h3>
+            </div>
+            <div id="about">
+                <p>RoomAmp2 v0.5</p>
+                <p>RoomAmp2 control is a software that enables you to take over control of a Linn RoomAmp 2.<br/>
+                    It is capable of reading and displaying status values from the Roomamp as well as
+                <ul>
+                <li>set the input channel</li>
+                <li>adjust the volume in the main room</li>
+                <li>adjust the balance</li>
+                <li>mute/unmute the device</li>
+                </ul>
+                 Pls visit our website for installation instructions and new releases.
+                </p>
+                <p>Author Eduard van den Bongard</p>
+                <p>
+                <address>
+                    AudioGrid (<a href="mailto:info@audiogrid.co.uk">email</a>, <a href="http://www.audiogrid.co.uk">www.audiogrid.co.uk</a>)
+                </address>
+                </p>
+                <p></p>
+                <p>(c) 2013 Eduard van den Bongard</p>
+            </div>
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>
