@@ -13,7 +13,7 @@
 
 package de.audiogrid.devices.rs232.model;
 
-public class LinnRoomAmp2 extends RS232Device
+public class LinnKINOS extends RS232Device
 {
-
+    public final static boolean isPollable = true;
 }

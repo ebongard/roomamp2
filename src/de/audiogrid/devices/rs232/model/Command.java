@@ -22,17 +22,19 @@ public class Command
     String deviceIdentifier;
     String key;
     String value;
+    String zone;
     boolean iseql;
 
     public Command()
     {
     }
 
-    public Command(String deviceIdentifier, String key, String value, boolean iseql)
+    public Command(String deviceIdentifier, String key, String value, String zone,boolean iseql)
     {
         this.deviceIdentifier = deviceIdentifier;
         this.key = key;
         this.value = value;
+        this.zone = zone;
         this.iseql = iseql;
     }
 
@@ -64,6 +66,16 @@ public class Command
     public void setValue(String value)
     {
         this.value = value;
+    }
+
+    public String getZone()
+    {
+        return zone;
+    }
+
+    public void setZone(String zone)
+    {
+        this.zone = zone;
     }
 
     public boolean isIseql()

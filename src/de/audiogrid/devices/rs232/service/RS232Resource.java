@@ -49,7 +49,7 @@ public class RS232Resource {
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public RS232Device update(Command command) {
         log.info("Updating device: " + command.getKey());
-        dao.issueCommand(command.getDeviceIdentifier(),command.getKey(), command.getValue(),command.isIseql());
+        dao.issueCommand(command.getDeviceIdentifier(),command.getKey(), command.getValue(),command.getZone(),command.isIseql());
         return dao.getDeviceByID(command.getDeviceIdentifier());
     }
 }

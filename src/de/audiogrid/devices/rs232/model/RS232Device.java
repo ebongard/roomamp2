@@ -30,9 +30,19 @@ public class RS232Device  implements Comparable
     String versionHW;
     String power;
     String mains;
+    String bas;
+    String treb;
+    String volume;
+    String listen;
+    String balance;
+    String mute;
     String path;
+    String origin;
     boolean isDaisyChain;
+
     HashMap<String,String> content = new HashMap<String, String>();
+
+    public final static boolean isPollable = false;
 
     public RS232Device()
     {
@@ -64,6 +74,7 @@ public class RS232Device  implements Comparable
                 ", mains='" + mains + '\'' +
                 ", path='" + path + '\'' +
                 ", isDaisyChain=" + isDaisyChain +
+                ", isDaisyChain=" + isPollable +
                 ", content=" + content +
                 ", name='" + name + '\'' +
                 '}';
@@ -245,6 +256,47 @@ public class RS232Device  implements Comparable
         return content.get("LISTEN");
     }
 
+    public String getOrigin()
+    {
+
+        return content.get("ORIGIN");
+    }
+
+    public void setBas(String bas)
+    {
+        this.bas = bas;
+    }
+
+    public void setTreb(String treb)
+    {
+        this.treb = treb;
+    }
+
+    public void setVolume(String volume)
+    {
+        this.volume = volume;
+    }
+
+    public void setListen(String listen)
+    {
+        this.listen = listen;
+    }
+
+    public void setBalance(String balance)
+    {
+        this.balance = balance;
+    }
+
+    public void setMute(String mute)
+    {
+        this.mute = mute;
+    }
+
+    public void setOrigin(String origin)
+    {
+        this.origin = origin;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -253,18 +305,26 @@ public class RS232Device  implements Comparable
 
         RS232Device that = (RS232Device) o;
 
+        if (isDaisyChain != that.isDaisyChain) return false;
         if (status != that.status) return false;
+        if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
+        if (bas != null ? !bas.equals(that.bas) : that.bas != null) return false;
+        if (content != null ? !content.equals(that.content) : that.content != null) return false;
         if (description != null ? !description.equals(that.description) : that.description != null) return false;
         if (groupid != null ? !groupid.equals(that.groupid) : that.groupid != null) return false;
         if (identifier != null ? !identifier.equals(that.identifier) : that.identifier != null) return false;
         if (image != null ? !image.equals(that.image) : that.image != null) return false;
         if (link != null ? !link.equals(that.link) : that.link != null) return false;
+        if (listen != null ? !listen.equals(that.listen) : that.listen != null) return false;
         if (mains != null ? !mains.equals(that.mains) : that.mains != null) return false;
+        if (mute != null ? !mute.equals(that.mute) : that.mute != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (path != null ? !path.equals(that.path) : that.path != null) return false;
         if (power != null ? !power.equals(that.power) : that.power != null) return false;
+        if (treb != null ? !treb.equals(that.treb) : that.treb != null) return false;
         if (versionHW != null ? !versionHW.equals(that.versionHW) : that.versionHW != null) return false;
         if (versionSW != null ? !versionSW.equals(that.versionSW) : that.versionSW != null) return false;
+        if (volume != null ? !volume.equals(that.volume) : that.volume != null) return false;
 
         return true;
     }
@@ -272,7 +332,8 @@ public class RS232Device  implements Comparable
     @Override
     public int hashCode()
     {
-        int result = identifier != null ? identifier.hashCode() : 0;
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (identifier != null ? identifier.hashCode() : 0);
         result = 31 * result + (groupid != null ? groupid.hashCode() : 0);
         result = 31 * result + status;
         result = 31 * result + (link != null ? link.hashCode() : 0);
@@ -282,8 +343,15 @@ public class RS232Device  implements Comparable
         result = 31 * result + (versionHW != null ? versionHW.hashCode() : 0);
         result = 31 * result + (power != null ? power.hashCode() : 0);
         result = 31 * result + (mains != null ? mains.hashCode() : 0);
+        result = 31 * result + (bas != null ? bas.hashCode() : 0);
+        result = 31 * result + (treb != null ? treb.hashCode() : 0);
+        result = 31 * result + (volume != null ? volume.hashCode() : 0);
+        result = 31 * result + (listen != null ? listen.hashCode() : 0);
+        result = 31 * result + (balance != null ? balance.hashCode() : 0);
+        result = 31 * result + (mute != null ? mute.hashCode() : 0);
         result = 31 * result + (path != null ? path.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (isDaisyChain ? 1 : 0);
+        result = 31 * result + (content != null ? content.hashCode() : 0);
         return result;
     }
 
