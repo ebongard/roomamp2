@@ -5,6 +5,7 @@ Known limitations/Issues
 - Setting the listening source is not always updated
 
 Versions
+- added jsrender template support
 0.6
 added Volume control for Subzone
 added control for Treb

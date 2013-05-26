@@ -1,4 +1,4 @@
-/*
+package de.audiogrid.devices.rs232.service;/*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *       THIS MATERIAL IS PROPRIETARY  TO  EDUARD VAN DEN BONGARD
@@ -10,8 +10,6 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
-
-package de.audiogrid.devices.rs232.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,18 +68,6 @@ public class SerialIO extends BaseSerialIO
             }
         }
 
-
-
-    public static void main(String[] args)
-    {
-        SerialIO io = SerialIO.getInstance();
-
-        System.out.println(io.getIDs());
-        System.out.println(io.getDevices());
-
-        io.finalize();
-    }
-
     public int getDelay()
     {
         return delay;
@@ -97,7 +83,7 @@ public class SerialIO extends BaseSerialIO
         sendData("$STANDBY OFF$\r\n");
     }
 
-    public ArrayList <String> getIDs()
+    public ArrayList <RS232Device> getIDs()
     {
         prepare();
 
@@ -118,11 +104,22 @@ public class SerialIO extends BaseSerialIO
         }
         else if (deviceIdentifier.contains("LR2"))
         {
+            // there can only on RoomAmp2 per serial connection, so we reduce it to LR2
             log.info("found id that can be NOT polled, " + deviceIdentifier);
-            String processedDeviceIdentifier = trimIDs(deviceIdentifier);
-            ids.add(processedDeviceIdentifier) ;
-            RS232Device d = createDevice(processedDeviceIdentifier,false);
-            model.put(processedDeviceIdentifier,d);
+            //String processedDeviceIdentifier = trimIDs(deviceIdentifier);
+            ids.add("LR2") ;
+            RS232Device d = createDevice("LR2",false);
+            model.put("LR2",d);
+
+        }
+        else if (deviceIdentifier.contains("IRT"))
+        {
+            // some Roomamps do have 2 IDs, there can only on RoomAmp2 per serial connection, so we reduce it to LR2
+            log.info("found id that can be NOT polled, " + deviceIdentifier);
+            //String processedDeviceIdentifier = trimIDs(deviceIdentifier);
+            ids.add("LR2") ;
+            RS232Device d = createDevice("LR2",false);
+            model.put("LR2",d);
 
         }
         else
@@ -131,11 +128,30 @@ public class SerialIO extends BaseSerialIO
             String processedDeviceIdentifier = trimIDs(deviceIdentifier);
             ids.add(processedDeviceIdentifier) ;
             RS232Device d = createDevice(processedDeviceIdentifier,false);
-            model.put(processedDeviceIdentifier,d);
+            model.put(processedDeviceIdentifier, d);
         }
 
-        return ids;
-    }
+        // now we need to check if we have UNIDISK SC's connected. It's not possible to do that during polling,
+        // as additional commands are not allowed.
+        if(model.keySet().contains("UNIDISK"))
+        {
+            log.info("found an UNIDISK in the chain");
+            RS232Device tmpDevice = model.get("UNIDISK");
+            //assuming that there is only one UNIDISK in the chain
+            if(isUNIDISKSC())
+            {
+                log.info("UNIDISK device is an UNIDISKSC, removing old one, adding new one");
+                tmpDevice.setIdentifier("UNIDISKSC");
+                model.remove("UNIDISK");
+
+                model.put("UNIDISKSC",tmpDevice);
+            }
+        }
+        // populate devices first
+        getDevices();
+
+        return new ArrayList<RS232Device>(model.values());
+        }
 
     public void poll(String currentDevice)
     {
@@ -182,17 +198,35 @@ public class SerialIO extends BaseSerialIO
         }
     }
 
+    private boolean isUNIDISKSC()
+    {
+        // only UNIDISKSC responds with data, UNDISK will fail
+        String result = sendData("@UNIDISK@$VOL ?$\r\n");
+        log.info("isUNIDISKSC:" + result);
+        if(result.contains("FAIL"))
+            return false;
+        else
+            return true;
+    }
+
 
     private  RS232Device createDevice(String deviceIdentifier,boolean isPollable)
     {
         log.info("creating RS232Device for id " + deviceIdentifier);
-        RS232Device d = new RS232Device();
+        RS232Device d;
+
+        d = new RS232Device();
+
         d.setIdentifier(deviceIdentifier);
 
         if(isPollable)
         {
             d.setDaisyChain(true);
-            d.setPath("@" + deviceIdentifier + "@");
+            //need to set path to UNIDISK
+            if(deviceIdentifier.contains("UNIDISK"))
+                d.setPath("@UNIDISK@");
+            else
+                d.setPath("@" + deviceIdentifier + "@");
         }
         else
         {
@@ -204,7 +238,7 @@ public class SerialIO extends BaseSerialIO
 
     public ArrayList<RS232Device> getDevices()
     {
-        getIDs();
+        //getIDs();
 
         for (String s : model.keySet())
         {
@@ -212,12 +246,13 @@ public class SerialIO extends BaseSerialIO
             log.info(d);
             model.put(s,d);
         }
-        ArrayList<RS232Device> myNodeList = new ArrayList<RS232Device>(model.values());
-        return myNodeList;
+        return new ArrayList<RS232Device>(model.values());
     }
 
     public RS232Device getDeviceByID(String deviceIdentifier)
     {
+        log.info("get device for " + deviceIdentifier + " is " + model.get(deviceIdentifier));
+        // the device is not yet filled here, so we need to query the device first.
         return model.get(deviceIdentifier);
     }
 
@@ -232,14 +267,18 @@ public class SerialIO extends BaseSerialIO
         log.info(response);
         // setting zone
         // This is only needed for roomamp 2
-        response = sendData("$ORIGIN " + zone + "$\r\n");
-        log.info(response);
-        try{
+        if(zone != null && zone.trim().length()>0)
+        {
+            response = sendData("$ORIGIN " + zone + "$\r\n");
+            log.info(response);
+            try{
 
-            Thread.sleep(delay);
-        }catch(InterruptedException ex){
-            //do stuff
+                Thread.sleep(delay);
+            }catch(InterruptedException ex){
+                //do stuff
+            }
         }
+
         String eql;
         if(iseql)
             eql = " = ";
@@ -306,33 +345,53 @@ public class SerialIO extends BaseSerialIO
 
     public ArrayList<String> getType(String deviceIdentifier)
     {
-        if(deviceIdentifier.contains("KINOS"))
+        if(deviceIdentifier.equalsIgnoreCase("KINOS"))
             return commandsForKINOS_STATUS();
-        else if (deviceIdentifier.contains("UNIDISK"))
-            return commandsForUNIDISC_STATUS();
-        else if (deviceIdentifier.contains("LR2"))
+        else if (deviceIdentifier.equalsIgnoreCase("UNIDISK"))
+            return commandsForUNIDISK_STATUS();
+        else if (deviceIdentifier.equalsIgnoreCase("UNIDISKSC"))
+            return commandsForUNIDISKSC_STATUS();
+        else if (deviceIdentifier.equalsIgnoreCase("LR2"))
             return commandsForLR2_STATUS();
         else
             return commandsForLR2_STATUS();
+    }
+
+
+    private final static ArrayList<String> commandsForAMP_STATUS()
+    {
+        ArrayList<String> commands = new ArrayList<String>();
+        commands.add("$VOL ?$\r\n");
+        commands.add("$BAL ?$\r\n");
+        commands.add("$BAS ?$\r\n");
+        commands.add("$TRB ?$\r\n");
+        commands.add("$MUTE ?$\r\n");
+        return commands;
+    }
+
+    private final static ArrayList<String> commandsForVERSION_STATUS()
+    {
+        ArrayList<String> commands = new ArrayList<String>();
+        commands.add("$VERSION SOFTWARE ?$\r\n");
+        commands.add("$VERSION HARDWARE ?$\r\n");
+        return commands;
     }
 
     private ArrayList<String> commandsForLR2_STATUS()
     {
         log.info("returning commands for RoomAmp2");
         ArrayList<String> commands = new ArrayList<String>();
-        commands.add("$VERSION SOFTWARE ?$\r\n");
-        commands.add("$VERSION HARDWARE ?$\r\n");
+
+        commands.addAll(commandsForVERSION_STATUS());
+
         commands.add("$ORIGIN ?$\r\n");
-        commands.add("$BAL ?$\r\n");
-        commands.add("$VOL ?$\r\n");
-        commands.add("$BAS ?$\r\n");
-        commands.add("$TRB ?$\r\n");
-        commands.add("$MUTE ?$\r\n");
         commands.add("$LISTEN ?$\r\n");
-        commands.add("$STANDBY ?$\r\n");
         commands.add("$COUNTER POWER$\r\n");
         commands.add("$COUNTER MAINS$\r\n");
         commands.add("$STATUS$\r\n");
+
+        commands.addAll(commandsForAMP_STATUS());
+
         return commands;
     }
 
@@ -341,17 +400,21 @@ public class SerialIO extends BaseSerialIO
         log.info("returning commands for KINOS");
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("$IR ?$\r\n");
-        commands.add("$STANDBY ?$\r\n");
-        commands.add("$MUTE ?$\r\n");
         commands.add("$OSG ?$\r\n");
         commands.add("$QUIET ?$\r\n");
-        commands.add("$VERSION SOFTWARE ?$\r\n");
-        commands.add("$VERSION HARDWARE ?$\r\n");
-        commands.add("$VOLUME ?$\r\n");
+
+        commands.addAll(commandsForVERSION_STATUS());
+
         commands.add("$VOLUME LIMITS$\r\n");
         commands.add("$[BALANCE|BALANCE_LR] ?$\r\n");
         commands.add("$[BALANCE|BALANCE_LR] LIMITS$\r\n");
         commands.add("$LIPSYNC ?$\r\n");
+        commands.add("$ LIPSYNC LIMITS$\r\n");
+        commands.add("$SPEAKER SIZE speaker ?$\r\n");
+        commands.add("$SPEAKER CALIBRATE speaker ?$\r\n");
+        commands.add("$SPEAKER CALIBRATE LIMITS$\r\n");
+        commands.add("$SPEAKER TRIM speaker ?$\r\n");
+        commands.add("$SPEAKER TRIM LIMITS$\r\n");
         commands.add("$SURROUND ?$\r\n");
         commands.add("$INPUT PROFILE ?$\r\n");
         commands.add("$INPUT PROFILE LIMITS$\r\n");
@@ -363,19 +426,25 @@ public class SerialIO extends BaseSerialIO
         commands.add("$PINKNOISE ?$\r\n");
         commands.add("$SYSTEM VOLUME ?$\r\n");
         commands.add("$SYSTEM STATUS$\r\n");
-        commands.add("$COUNTER POWER$\r\n");
-        commands.add("$COUNTER MAINS$\r\n");
+        commands.add("$COUNTER POWER ?$\r\n");
+        commands.add("$COUNTER MAINS ?$\r\n");
+        commands.add("$12V_TRIGGER number ?$\r\n");
+        commands.add("$FAN ?$\r\n");
+
+        commands.addAll(commandsForAMP_STATUS());
+
         return commands;
     }
 
-    private ArrayList<String> commandsForUNIDISC_STATUS()
+    private ArrayList<String> commandsForUNIDISK_STATUS()
     {
         log.info("returning commands for UNIDISK");
         ArrayList<String> commands = new ArrayList<String>();
         commands.add("$IR ?$\r\n");
-        commands.add("$VERSION SOFTWARE ?$\r\n");
-        commands.add("$VERSION HARDWARE ?$\r\n");
-        commands.add("$Mode?$\r\n");
+
+        commands.addAll(commandsForVERSION_STATUS());
+
+        commands.add("$MODE?$\r\n");
         commands.add("$TRACK ?$\r\n");
         commands.add("$TRACK TOT$\r\n");
         commands.add("$CHAPTER ?$\r\n");
@@ -392,9 +461,84 @@ public class SerialIO extends BaseSerialIO
         commands.add("$DISCID ?$\r\n");
         commands.add("$DISCTOC ?$\r\n");
         commands.add("$OPTION DISPLAY ?$\r\n");
-        commands.add("$COUNTER POWER$\r\n");
-        commands.add("$COUNTER MAINS$\r\n");
+        commands.add("$COUNTER POWER ?$\r\n");
+        commands.add("$COUNTER MAINS ?$\r\n");
+
+        commands.add("$OPTION IR_COMMANDS ?$\r\n");
+        commands.add("$OPTION IR_RC5_OUT ?$\r\n");
+        commands.add("$OPTION RC5_IN_OUT ?$\r\n");
+
         commands.add("$STATUS$\r\n");
+        return commands;
+    }
+
+    private ArrayList<String> commandsForUNIDISKSC_STATUS()
+    {
+        log.info("returning commands for UNIDISK SC");
+        ArrayList<String> commands = new ArrayList<String>();
+        commands.add("$IR ?$\r\n");
+
+        commands.addAll(commandsForVERSION_STATUS());
+
+        commands.add("$MODE$\r\n");
+        commands.add("$TRACK ?$\r\n");
+        commands.add("$TRACK TOT$\r\n");
+        commands.add("$CHAPTER ?$\r\n");
+        commands.add("$CHAPTER TOT$\r\n");
+        commands.add("DISCINFO ?$\r\n");
+        commands.add("NAMEINFO ?$\r\n");
+        commands.add("NAMEINFO TRACK ?$\r\n");
+        commands.add("NAMEINFO ARTIST ?$\r\n");
+        commands.add("NAMEINFO ALBUM ?$\r\n");
+        commands.add("$TIME DISC TOT$\r\n");
+        commands.add("$TIME TRACK TOT$\r\n");
+        commands.add("$TIME ?$\r\n");
+        commands.add("$PROGRAM ?$\r\n");
+        commands.add("$REPEAT ?$\r\n");
+        commands.add("$LAYER ?$\r\n");
+        commands.add("$DISCID$\r\n");
+        commands.add("$DISCTOC$\r\n");
+
+        commands.add("$COUNTER POWER ?$\r\n");
+        commands.add("$COUNTER MAINS ?$\r\n");
+        commands.add("$STATUS$\r\n");
+        commands.add("$OPTION RS232_EVENTS ?$\r\n");
+        commands.add("$OPTION RS232_STARTUP_MESSAGE ?$\r\n");
+
+        // only SC
+        commands.add("$LISTEN ?$\r\n");
+
+        commands.addAll(commandsForAMP_STATUS());
+
+        commands.add("$SURROUND ?$\r\n");
+        commands.add("$TV TYPE ?$\r\n");
+        commands.add("$SPEAKER SIZE FRONT ?$\r\n");
+        commands.add("$SPEAKER SIZE CENTRE ?$\r\n");
+        commands.add("$SPEAKER SIZE SURROUND ?$\r\n");
+        commands.add("$SPEAKER SIZE SUBWOOFER ?$\r\n");
+        commands.add("$SPEAKER TRIM FRONT_LEFT ?$\r\n");
+        commands.add("$SPEAKER TRIM FRONT_RIGHT ?$\r\n");
+        commands.add("$SPEAKER TRIM CENTRE ?$\r\n");
+        commands.add("$SPEAKER TRIM SURROUND_LEFT ?$\r\n");
+        commands.add("$SPEAKER TRIM SURROUND_RIGHT ?$\r\n");
+        commands.add("$SPEAKER TRIM SUBWOOFER ?$\r\n");
+        commands.add("$ASPECTRATIO ?$\r\n");
+        commands.add("$NTSCTYPE ?$\r\n");
+        commands.add("$CHANNELSETUP ?$\r\n");
+        commands.add("$SPDIFOUTPUT ?$\r\n");
+        commands.add("$PRIMARYDISPLAYDEVICE ?$\r\n");
+        commands.add("$CLOSEDCAPTIONS ?$\r\n");
+        commands.add("$DOWNMIX ?$\r\n");
+        commands.add("$LPCMOUTPUT ?$\r\n");
+        commands.add("$DUALMONO ?$\r\n");
+        commands.add("$MIDNIGHTMOVIE ?$\r\n");
+
+        //Knekt
+        commands.add("$OPTION KNEKT_MODE ?$\r\n");
+        commands.add("$OPTION KNEKT_AUDIO ?$\r\n");
+        // returns only failures
+        //commands.add("$OPTION KNEKT_LFE ?$\r\n");
+
         return commands;
     }
 
@@ -549,23 +693,29 @@ public class SerialIO extends BaseSerialIO
             if(d.length == 8 && d[0].startsWith("VERSION"))
             //e.g.   VERSION SOFTWARE H8 S1150210 ESS S1520208 MECH 03.03.00.00
             {
-                target.put(d[0] + " " + d[1] + " " + d[2] ,d[3]);
+                log.info(d[0] + " " + d[1] + " " + d[2] + ":" + d[3]);
+                log.info(d[0] + " " + d[1] + " " + d[4] + ":" + d[5]);
+                log.info(d[0] + " " + d[1] + " " + d[6] + ":" + d[7]);
+                target.put(d[0] + " " + d[1] + " " + d[2], d[3]);
                 target.put(d[0] + " " + d[1] + " " + d[4] ,d[5]);
                 target.put(d[0] + " " + d[1] + " " + d[6] ,d[7]);
             }
             else if(d.length == 4 && d[0].startsWith("VERSION"))
             //e.g.   VERSION HARDWARE PCAS317L2R2 B60000018E854614
             {
-                target.put(d[0] + " " + d[1],d[2] + " "+ d[3]);
+                log.info(d[0] + " " + d[1] + ":" + d[2] + " "+ d[3]);
+                target.put(d[0] + " " + d[1], d[2] + " " + d[3]);
             }
             else if(d.length == 3)
             //e.g.   COUNTER MAINS 0:897:23:17
             {
-                target.put(d[0] + " " + d[1],d[2]);
+                log.info(d[0] + " " + d[1] + ":" + d[2]);
+                target.put(d[0] + " " + d[1], d[2]);
             }
             else if (d.length == 2)
             // e.g. BAL -2
             {
+                log.info(d[0] + ":" + d[1]);
                 target.put(d[0], d[1]);
             }
             else

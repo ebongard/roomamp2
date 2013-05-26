@@ -4,8 +4,8 @@ var rootURL = "rest/devices";
 var currentdevice;
 
 // Retrieve device list when application starts 
-findAll();
-
+//findAll();
+findIDs();
 
 // Register listeners
 //Volume
@@ -43,6 +43,21 @@ $('#slider5').live('slidestop', function () {
     updateDevice(currentdevice.identifier, 'TRB', slider_value, 'ZONETYPE_ROOM',true);
 });
 
+//Volume
+$('#slider_UNIDISKSC_VOLUME').live('slidestop', function () {
+    var slider_value = $(this).val()
+    console.log("slider Volume" + slider_value)
+    updateDevice(currentdevice.identifier, 'VOL', slider_value, '',true);
+});
+
+// Balance
+$('#slider3UnidiskSC').live('slidestop', function () {
+    var slider_value = $(this).val()
+    console.log("slider Balance " + slider_value)
+    updateDevice(currentdevice.identifier, 'BAL', slider_value, 'ZONETYPE_ROOM',true);
+});
+
+
 $('#toggleswitch1').live('slidestop', function () {
     var slider_value = $(this).val();
     var totransport = '';
@@ -60,6 +75,16 @@ $("img").error(function () {
     $(this).attr("src", "images/generic.jpg");
 
 });
+
+function findIDs() {
+    console.log('findIDs');
+    $.ajax({
+        type:'GET',
+        url:rootURL,
+        dataType:"json", // data type of response
+        success:initialize
+    });
+}
 
 function findAll() {
     console.log('findAll');
@@ -81,16 +106,36 @@ function findByName(searchKey) {
     });
 }
 
-function findById(id) {
+// 1. get data from backend
+// 2. show correct panel in devicecommands space
+// 3. fill data correctly
+function findById1(id) {
+    console.log('findById: ' + id);
+    $.mobile.showPageLoadingMsg();
+    $.ajax({
+        type:'GET',
+        url:rootURL + '/' + id,
+        dataType:"json",
+        success:function (data) {
+            console.log('findById1 success: ' + data.name);
+            currentdevice = data;
+            populateDeviceCommandsView(currentdevice);
+            $.mobile.hidePageLoadingMsg();
+        }
+    });
+}
+
+
+function findById(id,url,options) {
     console.log('findById: ' + id);
     $.ajax({
         type:'GET',
         url:rootURL + '/' + id,
         dataType:"json",
         success:function (data) {
-            console.log('findById success: ' + data.name);
+            console.log('findById success: ' + data);
             currentdevice = data;
-            renderDetails(currentdevice);
+            renderDetails(currentdevice,url,options);
         }
     });
 }
@@ -118,6 +163,24 @@ function updateDevice(deviceID, key, value, zone, iseql) {
             alert('update device error: ' + textStatus);
         }
     });
+}
+
+function initialize(data)
+{
+    var $page = $( "#pageDeviceCommands" );
+    var $header = $page.children( ":jqmData(role=header)" );
+
+    $.mobile.showPageLoadingMsg();
+
+    console.log("initialize: " + data);
+
+    $( "#pageDeviceOverview_List" ).html($( "#DeviceOverviewTemplate" ).render( data ));
+
+    $header.find( "h3" ).html( "Please choose a device" );
+    $( "#list_devices" ).html($( "#DevicePanelTemplate" ).render( data ));
+
+    $( "#list_devices" ).listview("refresh");
+    $.mobile.hidePageLoadingMsg();
 }
 
 function renderList(data) {
@@ -222,3 +285,75 @@ function renderList(data) {
         });
     });
 }
+
+function populateDeviceCommandsView(currentdevice)
+{
+    var $page = $( "#pageDeviceCommands" );
+    var $header = $page.children( ":jqmData(role=header)" );
+    var $content = $page.children( ":jqmData(role=content)" );
+
+    console.log("populateDeviceCommandsView for device " + currentdevice.identifier );
+    $header.find( "h3" ).html( "Commands for " + currentdevice.identifier );
+
+    $( "#contentDeviceCommands" ).html(
+        $( "#" + currentdevice.identifier  + "Template" ).render( currentdevice )
+    );
+
+
+    document.mySwipe = new Swipe(document.getElementById(currentdevice.identifier  + "TemplateSwipe"));
+
+    //set radio buttons correctly, need to check how that works with jsrender
+    $("#radio" + currentdevice.listen + currentdevice.identifier).attr('checked',true);
+
+    $page.trigger('pagecreate');
+
+    if (currentdevice.mute == 'OFF')
+        $('#toggleswitch1' + currentdevice.identifier).val('off').slider("refresh");
+    else if(currentdevice.mute == 'ON')
+        $('#toggleswitch1' + currentdevice.identifier).val('on').slider("refresh");
+    else
+        console.log("no switches available");
+
+}
+
+
+    function renderDetails(data,url,options)
+    {
+        console.log("renderDetails ...." + data.identifier)
+
+        // Get the page we are going to dump our content into.
+        var $page = $( "#category-items" );
+
+        // Get the header for the page.
+        var $header = $page.children( ":jqmData(role=header)" );
+
+        // Get the content area element for the page.
+        var $content = $page.children( ":jqmData(role=content)" );
+
+
+        $( "#1contentDeviceCommands" ).html(
+            $( "#DeviceDetailsTemplate" ).render( data )
+        );
+
+        // Pages are lazily enhanced. We call page() on the page
+        // element to make sure it is always enhanced before we
+        // attempt to enhance the listview markup we just injected.
+        // Subsequent calls to page() are ignored since a page/widget
+        // can only be enhanced once.
+        $page.page();
+
+        // Enhance the listview we just injected.
+      //  $content.find( ":jqmData(role=listview)" ).listview();
+
+        // We don't want the data-url of the page we just modified
+        // to be the url that shows up in the browser's location field,
+        // so set the dataUrl option to the URL for the category
+        // we just loaded.
+        options.dataUrl = url;
+
+        // Now call changePage() and tell it to switch to
+        // the page we just modified.
+        $.mobile.changePage( $page, options );
+    }
+
+

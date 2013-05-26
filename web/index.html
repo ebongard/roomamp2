@@ -3,122 +3,501 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <link rel="apple-touch-icon" href="images/audiogrid_logo_small.png"/>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <title> RoomAmp 2 control</title>
+        <title>SedeC</title>
 
         <link rel="stylesheet" href="css/jquery.mobile-1.3.1.min.css" />
         <link rel="stylesheet" href="css/my.css" />
+        <style>
+
+                /* Swipe 2 required styles */
+
+            .swipe {
+                overflow: hidden;
+                visibility: hidden;
+                position: relative;
+            }
+            .swipe-wrap {
+                overflow: hidden;
+                position: relative;
+            }
+            .swipe-wrap > div {
+                float:left;
+                width:100%;
+                position: relative;
+            }
+
+                /* END required styles */
+
+        </style>
 
         <script src="js/jquery-1.7.2.min.js"></script>
         <script src="js/jquery.mobile-1.3.1.min.js"></script>
+        <script src="js/jsrender.js" type="text/javascript"></script>
         <script src="js/main.js"></script>
-    </head>
+        <script>
+
+        $(document).ready(function() {
+
+        // Dieser Aufruf sollte laut jQM-Doku eigentlich nicht nötig sein, fkt sonst aber nicht:
+        loadSwipe();
+
+        $( '#pageDeviceCommands' ).live( 'pageinit',function(event){
+        loadSwipe();
+        });
+
+        function loadSwipe() {
+        $.getScript("js/swipe.js", function(data, textStatus, jqxhr)
+        {
+            console.log(textStatus); //success
+            document.mySwipe = new Swipe(document.getElementById('mySwipe'));
+            document.mySwipeUnidiskSC = new Swipe(document.getElementById('mySwipeUnidiskSC'));
+        });
+        }
+
+        });
+
+        // Listen for any attempts to call changePage().
+        $(document).bind( "pagebeforechange", function( e, data )
+        {
+            // We only want to handle changePage() calls where the caller is
+            // asking us to load a page by URL.
+            if ( typeof data.toPage === "string" )
+            {
+                // We are being asked to load a page by URL, but we only
+                // want to handle URLs that request the data for a specific
+                // category.
+                var u = $.mobile.path.parseUrl( data.toPage );
+                if ( u.pathname.search("displayDeviceDetails") !== -1 )
+                {
+                    // We're being asked to display the items for a specific category.
+                    // Call our internal method that builds the content for the category
+                    // on the fly based on our in-memory category data structure.
+                    console.log("u " + $.mobile.path.parseUrl( data.toPage ));
+                    console.log("u " + ($.mobile.path.parseUrl( data.toPage)).hash);
+                    console.log("u " + u.hash);
+                    console.log("u " + u.pathname);
+                    console.log("u " + u.href);
+
+                    //var categoryName = u.hash.replace( /.*id=/, "" );
+                    var categoryName = u.href.replace( /.*id=/, "" );
+                    console.log("categoryName"+categoryName);
+                    //var pageSelector = u.hash.replace( /\?.*$/, "" );
+                    var pageSelector = u.href.replace( /\?.*$/, "" );
+                    console.log("pageSelector"+pageSelector);
+                    findById(categoryName, u.href, data.options );
+
+                    // Make sure to tell changePage() we've handled this call so it doesn't
+                    // have to do anything.
+                    e.preventDefault();
+                }
+            }
+        });
+
+        </script>
+
+        </head>
     <body>
-        <!-- Home -->
-        <div data-role="page" id="page1">
-            <div data-theme="a" data-role="header" data-position="fixed">
-                <h3>
-                    RoomAmp2 control
-                </h3>
-            </div>
-            <div data-role="content">
-                <div data-role="fieldcontain">
-                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <legend>
-                            Source:
-                        </legend>
-                        <input id="radio1" name="Source" value="src0" type="radio" onclick="updateDevice('','LISTEN SOURCE',0,false)"/>
-                        <label for="radio1">
-                            0
-                        </label>
-                        <input id="radio2" name="Source" value="src1" type="radio" onclick="updateDevice('','LISTEN SOURCE',1,false)"/>
-                        <label for="radio2">
-                            1
-                        </label>
-                        <input id="radio3" name="Source" value="src2" type="radio" onclick="updateDevice('','LISTEN SOURCE',2,false)"/>
-                        <label for="radio3">
-                            2
-                        </label>
-                        <input id="radio4" name="Source" value="src3" type="radio" onclick="updateDevice('','LISTEN SOURCE',3,false)"/>
-                        <label for="radio4">
-                            3
-                        </label>
-                    </fieldset>
-                </div>
-                <div data-role="fieldcontain1">
-                    <label for="slider1">
-                        Volume
-                    </label>
-                    <input id="slider1" type="range" name="slider1" value="50" min="0" max="100" data-highlight="true" />
+
+    <script id="LR2Template" type="text/x-jsrender">
+
+        <div id='LR2TemplateSwipe' class='swipe'>
+            <div class='swipe-wrap'>
+                <div>
+                    <div data-role="content">
+                        <div data-role="fieldcontain">
+                            <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                                <legend>
+                                    Source:
+                                </legend>
+                                <input id="radio1LR2" name="Source" value="src0" type="radio" onchange="updateDevice('','LISTEN SOURCE',0,'ZONETYPE_ROOM',false)"/>
+                                <label for="radio1LR2">0</label>
+                                <input id="radio2LR2" name="Source" value="src1" type="radio" onchange="updateDevice('','LISTEN SOURCE',1,'ZONETYPE_ROOM',false)"/>
+                                <label for="radio2LR2">1</label>
+                                <input id="radio3LR2" name="Source" value="src2" type="radio" onchange="updateDevice('','LISTEN SOURCE',2,'ZONETYPE_ROOM',false)"/>
+                                <label for="radio3LR2">2</label>
+                                <input id="radio4LR2" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',3,'ZONETYPE_ROOM',false)"/>
+                                <label for="radio4LR2">3</label>
+                            </fieldset>
+                        </div>
+                        <div data-role="fieldcontain">
+                            <label for="slider1">Volume</label>
+                            <input id="slider1" type="range" name="slider1" value="{{>volume}}" min="0" max="100" data-highlight="true" />
+
+                        </div>
+                        <div data-role="fieldcontain">
+                            <label for="slider2">Volume Subzone</label>
+                            <input id="slider2" type="range" name="slider2" value="50" min="0" max="100" data-highlight="true" />
+
+                        </div>
+                        <div data-role="fieldcontain">
+                            <label for="toggleswitch1LR2">Mute</label>
+                            <select name="toggleswitch1LR2" id="toggleswitch1LR2" data-theme="" data-role="slider">
+                                <option value="off">Off</option>
+                                <option value="on">On</option>
+                            </select>
+                        </div>
+                    </div>
 
                 </div>
-                <div data-role="fieldcontain2">
-                    <label for="slider2">
-                        Balance
-                    </label>
-                    <input id="slider2" type="range" name="slider2" value="0" min="-10" max="10" data-highlight="false" />
-                </div>
-                <div data-role="fieldcontain3">
-                    <label for="toggleswitch1">
-                        Mute
-                    </label>
-                    <select name="toggleswitch1" id="toggleswitch1" data-theme="" data-role="slider">
-                        <option value="off">
-                            Off
-                        </option>
-                        <option value="on">
-                            On
-                        </option>
-                    </select>
-                </div>
-            </div>
-                <div data-theme="a" data-role="footer" data-position="fixed">
-                <div data-role="navbar" data-iconpos="top">
-                    <ul>
-                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
-                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
-                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
-                    </ul>
+                <div>
+                    <div data-role="content">
+                        <div data-role="fieldcontain">
+                            <label for="slider3">Balance</label>
+                            <input id="slider3" type="range" name="slider3" value="{{>balance}}" min="-10" max="10" data-highlight="false" />
+                        </div>
+                        <div data-role="fieldcontain">
+                            <label for="slider4">Bas</label>
+                            <input id="slider4" type="range" name="slider4" value="{{>bas}}" min="-10" max="10" data-highlight="false" />
+                        </div>
+                        <div data-role="fieldcontain">
+                            <label for="slider5">Treb</label>
+                            <input id="slider5" type="range" name="slider5" value="{{>treb}}" min="-10" max="10" data-highlight="false" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div data-role="page" id="page2">
-            <div data-theme="a" data-role="header" data-position="fixed">
-                <h3>
-                    Settings
-                </h3>
+
+        <div class="ui-grid-a">
+            <div class="ui-block-a">
+                <a data-role="button" onclick='mySwipe.prev();return false;'>prev</a>
             </div>
-                <div id="deviceList"></div>
+            <div class="ui-block-b">
+                <a data-role="button" onclick='mySwipe.next();return false;'>next</a>
+            </div>
+        </div>
+
+    </script>
+
+    <script id="UNIDISKSCTemplate" type="text/x-jsrender">
+        <div data-role="fieldcontain">
+            <div class="ui-grid-b">
+                <div class="ui-block-a" style="width:90%;text-align:left;">
+            <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                <input id="radio1UNIDISKSC" name="Source" value="src0" type="radio" onchange="updateDevice('','LISTEN','DISC','',false);mySwipe.slide(0,500);"/>
+                <label for="radio1UNIDISKSC">CD/DVD</label>
+                <input id="radio2UNIDISKSC" name="Source" value="src1" type="radio" onchange="updateDevice('','LISTEN','TV','',false);mySwipe.slide(1,500);"/>
+                <label for="radio2UNIDISKSC">TV</label>
+                <input id="radio3UNIDISKSC" name="Source" value="src2" type="radio" onchange="updateDevice('','LISTEN','VCR','',false);mySwipe.slide(2,500);"/>
+                <label for="radio3UNIDISKSC">VCR</label>
+                <input id="radio4UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','AUX1','',false);mySwipe.slide(3,500);"/>
+                <label for="radio4UNIDISKSC">AUX 1</label>
+                <input id="radio5UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','AUX2','',false);mySwipe.slide(4,500);"/>
+                <label for="radio5UNIDISKSC">AUX 2</label>
+                <input id="radio6UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','DIG1','',false);mySwipe.slide(5,500);"/>
+                <label for="radio6UNIDISKSC">DIG 1</label>
+                <input id="radio7UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','DIG2','',false);mySwipe.slide(6,500);"/>
+                <label for="radio7UNIDISKSC">DIG 2</label>
+                <input id="radio8UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','DIG3','',false);mySwipe.slide(7,500);"/>
+                <label for="radio8UNIDISKSC">DIG 3</label>
+                <input id="radio9UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','DIG4','',false);mySwipe.slide(8,500);"/>
+                <label for="radio9UNIDISKSC">DIG 4</label>
+                <input id="radio10UNIDISKSC" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN','MAIN','',false);mySwipe.slide(9,500);"/>
+                <label for="radio10UNIDISKSC">Knekt</label>
+            </fieldset>
+                    </div>
+                <div class="ui-block-b" style="width:10%;">
+                    <a href="#" onclick="mySwipe.slide(10,500);false;">Settings</a>
+                    </div>
+             </div>
+        </div>
+
+        <div data-role="fieldcontain">
+            <input id="slider_UNIDISKSC_VOLUME" type="range" name="slider_UNIDISKSC_VOLUME" value="{{>volume}}" min="0" max="100" data-highlight="true" />
+        </div>
+
+        <div id='UNIDISKSCTemplateSwipe' class='swipe'>
+            <div class='swipe-wrap'>
+                <div>
+                    <div data-role="content" id="UNDISKSC_CD">
+
+                        <div data-role="fieldcontain">
+
+                            <div class="ui-grid-c">
+                                <div class="ui-block-a">
+                                    <a data-role="button" onclick="updateDevice('','TRACK','-','',false);"> |<< </a>
+                                </div>
+                                <div class="ui-block-b">
+                                    <a data-role="button" onclick="updateDevice('','PLAY','','',false);">play</a>
+                                </div>
+                                <div class="ui-block-c">
+                                    <a data-role="button" onclick="updateDevice('','STOP','','',false);"> Stop </a>
+                                </div>
+                                <div class="ui-block-d">
+                                    <a data-role="button" onclick="updateDevice('','TRACK','+','',false);"> >>| </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div>Current Source is TV</div>
+                <div>Current Source is VCR</div>
+                <div>Current Source is AUX1</div>
+                <div>Current Source is AUX2</div>
+                <div>Current Source is DIG1</div>
+                <div>Current Source is DIG2</div>
+                <div>Current Source is DIG3</div>
+                <div>Current Source is DIG4</div>
+                <div>Current Source is Knekt</div>
+                <div>
+                    <div data-role="content">
+                        <div data-role="fieldcontain">
+                            <label for="slider3">Balance</label>
+                            <input id="slider3UnidiskSC" type="range" name="slider3" value="{{>balance}}" min="-10" max="10" data-highlight="false" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </script>
+
+    <script id="UNIDISKTemplate" type="text/x-jsrender">
+        <div data-role="content" id="UNDISK_CD">
+            <div data-role="fieldcontain">
+                <div class="ui-grid-c">
+                    <div class="ui-block-a">
+                        <a data-role="button" onclick="updateDevice('','TRACK','-','',false);"> |<< </a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a data-role="button" onclick="updateDevice('','PLAY','','',false);">play</a>
+                    </div>
+                    <div class="ui-block-c">
+                        <a data-role="button" onclick="updateDevice('','STOP','','',false);"> Stop </a>
+                    </div>
+                    <div class="ui-block-d">
+                        <a data-role="button" onclick="updateDevice('','TRACK','+','',false);"> >>| </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="KINOSTemplate" type="text/x-jsrender">
+        <div data-role="fieldcontain">
+            <div class="ui-grid-b">
+                <div class="ui-block-a" style="width:90%;text-align:left;">
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <input id="radio1KINOS" name="Source" value="src0" type="radio" onchange="updateDevice('','LISTEN SOURCE',0,'ZONETYPE_ROOM',false);mySwipe.slide(0,500);"/>
+                        <label for="radio1KINOS">CD/DVD</label>
+                        <input id="radio2KINOS" name="Source" value="src1" type="radio" onchange="updateDevice('','LISTEN SOURCE',1,'ZONETYPE_ROOM',false);mySwipe.slide(1,500);"/>
+                        <label for="radio2KINOS">TV</label>
+                        <input id="radio3KINOS" name="Source" value="src2" type="radio" onchange="updateDevice('','LISTEN SOURCE',2,'ZONETYPE_ROOM',false);mySwipe.slide(2,500);"/>
+                        <label for="radio3KINOS">VCD</label>
+                        <input id="radio4KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',3,'ZONETYPE_ROOM',false);mySwipe.slide(3,500);"/>
+                        <label for="radio4KINOS">AUX 1</label>
+                        <input id="radio5KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',4,'ZONETYPE_ROOM',false);mySwipe.slide(4,500);"/>
+                        <label for="radio5KINOS">AUX 2</label>
+                        <input id="radio6KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',5,'ZONETYPE_ROOM',false);mySwipe.slide(5,500);"/>
+                        <label for="radio6KINOS">DIG 1</label>
+                        <input id="radio7KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',6,'ZONETYPE_ROOM',false);mySwipe.slide(6,500);"/>
+                        <label for="radio7KINOS">DIG 2</label>
+                        <input id="radio8KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',7,'ZONETYPE_ROOM',false);mySwipe.slide(7,500);"/>
+                        <label for="radio8KINOS">DIG 3</label>
+                        <input id="radio9KINOS" name="Source" value="src3" type="radio" onchange="updateDevice('','LISTEN SOURCE',8,'ZONETYPE_ROOM',false);mySwipe.slide(8,500);"/>
+                        <label for="radio9KINOS">DIG 4</label>
+                    </fieldset>
+                </div>
+                <div class="ui-block-b" style="width:10%;">
+                    <a href="#" onclick="mySwipe.slide(9,500);false;">Settings</a>
+                </div>
+            </div>
+        </div>
+        <!--
+        Audio
+        ANALOG[1...6]
+          ANALOGGROUP
+          ANALOGAUX
+          ANALOGSCART[TV|VCR]
+          ANALOGKNEKT
+          TOSAUX
+          TOS[1...3]
+          SPDIF[1...3]
+
+          Video
+          NONE
+            SVIDEO[1...4]
+            SVIDEOSCART
+            SVIDEOAUX
+            COMPONENTSCARTVCR
+            [RGB|RGBHV|YPRPB]
+            COMPOSITE[1...12]
+            RGBGROUP[1...4]
+            [RGB|YPRPB|YPRPBHDV]
+            RGBHVGROUPRGBHV
+            COMPOSITESCARTTV
+            COMPOSITESCARTVCR
+            COMPOSITEAUX
+        -->
+    </script>
+
+    <script id="DeviceOverviewTemplate" type="text/x-jsrender">
+        {{for RS232Device}}
+            {{if identifier !== ""}}
+                <li><a href="displayDeviceDetails?id={{>identifier}}">{{>identifier}}</a></li>
+            {{/if}}
+        {{/for}}
+    </script>
+
+    <script id="DevicePanelTemplate" type="text/x-jsrender">
+        <li data-icon="delete" style="background-color:#111;">
+            <a href="#" data-rel="close">Close device selection</a>
+        </li>
+        {{for RS232Device}}
+            {{if identifier !== ""}}
+                <li><a href="#" onclick="findById1('{{>identifier}}');return false;">{{>identifier}}</a></li>
+            {{/if}}
+        {{/for}}
+    </script>
+
+    <script id="DeviceDetailsTemplate" type="text/x-jsrender">
+        <p>Details for Device {{>identifier}}</p>
+
+        <div class="ui-grid-a">
+            {{for content.entry}}
+            <div class="ui-block-a">{{>key}}</div>
+            <div class="ui-block-b" id="{{>key}}">{{>value}}</div>
+            {{/for}}
+        </div>
+
+    </script>
+
+    <!-- Home -->
+        <div data-role="page" id="pageDeviceCommands"  class="ui-responsive-panel">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>DeviceOverview</h3>
+                <a href="#nav-panel-devicecommands" data-icon="bars" data-iconpos="notext">Menu</a>
+            </div>
+            <div data-role="content" id="contentDeviceCommands">
+                <div class="center-wrapper">
+                    <div>
+                        <h2>Please wait until the Application is initialized...</h2>
+                        <h2>and the title changes.</h2>
+                    </div>
+                </div>
+
+            </div>
+
             <div data-theme="a" data-role="footer" data-position="fixed">
                 <div data-role="navbar" data-iconpos="top">
                     <ul>
-                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
-                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
-                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <style>
+                .nav-search .ui-btn-up-a {
+                    background-image:none;
+                    background-color:#333333;
+                }
+                .nav-search .ui-btn-inner {
+                    border-top: 1px solid #888;
+                    border-color: rgba(255, 255, 255, .1);
+                }
+            </style>
+            <div data-role="panel" data-position="left" data-position-fixed="false" data-display="reveal"
+                 id="nav-panel-devicecommands" data-theme="a">
+                <ul id="list_devices"  data-role="listview" data-theme="a" data-divider-theme="a" style="margin-top:-16px;"
+                    class="nav-search">
+                </ul>
+
+                <!-- panel content goes here -->
+            </div>
+            <!-- /panel -->
+        </div>
+
+        <div data-role="page" id="pageDeviceOverview">
+
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>DeviceOverview</h3>
+            </div>
+            <div data-role="content">
+                <div id="deviceList"></div>
+                    <h3>Select a Device below to show its details:</h3>
+                    <ul id="pageDeviceOverview_List" data-role="listview" data-inset="true"></ul>
+            </div>
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
                     </ul>
                 </div>
             </div>
         </div>
-        <div data-role="page" id="page3">
+
+        <div data-role="page" id="category-items" data-add-back-btn="true">
+            <div data-role="header"><h3></h3></div>
+            <div data-role="content">
+                <div id="1contentDeviceCommands"></div>
+
+            </div>
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="pageSettings">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>Settings</h3>
+                <div class="ui-btn-right"><a href="#pageAbout" data-role="button" data-icon="gear">About</a></div>
+            </div>
+            <div id="settings">
+                <p>SETTINGS</p>
+            </div>
+            <div data-role="content" >
+            <p>Currently there are no settings needed for this program.</p>
+
+            </div><!-- /content -->
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="pageAbout" addBackBtn="true">
             <div data-theme="a" data-role="header" data-position="fixed">
                 <h3>
                     About
                 </h3>
             </div>
+            <div data-role="content">
             <div id="about">
-                <p>RoomAmp2 v0.5</p>
-                <p>RoomAmp2 control is a software that enables you to take over control of a Linn RoomAmp 2.<br/>
-                    It is capable of reading and displaying status values from the Roomamp as well as
+                <p>SedeC v0.7</p>
+                <p>SedeC (Serial device Controller) is a software that enables you to take over control of some Linn devices.<br/>
+                    Supported are RoomAmp2, Unidisk SC, Unidisk, Kinos devices. Also daisychained devices are supported.
+                    Sedec is capable of reading and displaying status values from the Roomamp as well as
                 <ul>
                 <li>set the input channel</li>
                 <li>adjust the volume in the main room</li>
+                <li>adjust the volume in the sub zone</li>
                 <li>adjust the balance</li>
+                <li>adjust the treb</li>
+                <li>adjust the bas</li>
                 <li>mute/unmute the device</li>
                 </ul>
                  Pls visit our website for installation instructions and new releases.
+                <br/>
+                A short manual can be found <a href="#pageManual" data-transition="fade" data-theme="">here</a>.
                 </p>
-                <p>Author Eduard van den Bongard</p>
+
                 <p>
                 <address>
                     AudioGrid (<a href="mailto:info@audiogrid.co.uk">email</a>, <a href="http://www.audiogrid.co.uk">www.audiogrid.co.uk</a>)
@@ -127,16 +506,38 @@
                 <p></p>
                 <p>(c) 2013 Eduard van den Bongard</p>
             </div>
+                </div>
             <div data-theme="a" data-role="footer" data-position="fixed">
                 <div data-role="navbar" data-iconpos="top">
                     <ul>
-                        <li><a href="#page1" data-transition="fade" data-theme="" data-icon="home"></a></li>
-                        <li><a href="#page2" data-transition="fade" data-theme="" data-icon="gear"></a></li>
-                        <li><a href="#page3" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
                     </ul>
                 </div>
             </div>
         </div>
-
+        <div data-role="page" id="pageManual">
+            <div data-theme="a" data-role="header" data-position="fixed">
+                <h3>Manual</h3>
+            </div>
+            <div data-role="content">
+            <div id="manual">
+                <p>Currently there is no manual available.</p>
+            </div>
+                </div>
+            <div data-theme="a" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+                    <ul>
+                        <li><a href="#pageDeviceCommands" data-transition="fade" data-theme="" data-icon="home"></a></li>
+                        <li><a href="#pageDeviceOverview" data-transition="fade" data-theme="" data-icon="gear"></a></li>
+                        <li><a href="#pageSettings" data-transition="fade" data-theme="" data-icon="grid"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
+
+
+

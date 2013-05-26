@@ -21,16 +21,26 @@ public class RS232Resource {
 
     Log log = LogFactory.getLog(RS232Resource.class);
     SerialIO dao = SerialIO.getInstance();
-	
+
+    /*
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	//public List<RS232Device> findAll() {
+
 	public List<RS232Device> findAll() {
 		log.info("getDevices");
 		return dao.getDevices();
 	}
+    */
 
-	@GET @Path("{id}")
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+
+    public List<RS232Device> findIDs() {
+        log.info("getIDs");
+        return dao.getIDs();
+    }
+
+    @GET @Path("{id}")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public RS232Device getDeviceByID(@PathParam("id") String id) {
 		log.info("getDeviceByID " + id);

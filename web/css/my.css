@@ -12,3 +12,19 @@
     border: 1px solid;
     border-color: #E5E5E5 #D3D3D3 #B9C1C6;
 }
+
+#Logo {
+    display: block;
+    margin: 1em auto 0;
+    width: 75%;
+}
+.center-wrapper{
+    text-align: center;
+}
+.center-wrapper * {
+    margin: 0 auto;
+}
+.ui-mobile .ui-page .ui-slider-input,
+.ui-mobile .ui-dialog .ui-slider-input {
+    display : none;
+}

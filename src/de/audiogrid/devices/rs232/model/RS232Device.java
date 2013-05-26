@@ -40,6 +40,8 @@ public class RS232Device  implements Comparable
     String origin;
     boolean isDaisyChain;
 
+
+
     HashMap<String,String> content = new HashMap<String, String>();
 
     public final static boolean isPollable = false;
@@ -141,6 +143,30 @@ public class RS232Device  implements Comparable
         this.status = status;
     }
 
+    public String getTrack()
+    {
+        return content.get("TRACK");
+    }
+
+
+    public String getTrack_TOT()
+    {
+        return content.get("TRACK TOT");
+    }
+
+
+    public String getRepeat()
+    {
+        return content.get("REPEAT");
+    }
+
+
+    public String getLayer()
+    {
+        return content.get("LAYER");
+    }
+
+
     public String getVersionSW()
     {
 
@@ -183,6 +209,27 @@ public class RS232Device  implements Comparable
     public void setMains(String mains)
     {
         this.mains = mains;
+    }
+
+    public String getIr()
+    {
+        return content.get("IR");
+    }
+
+
+    public String getDiscid()
+    {
+        return content.get("DISCID");
+    }
+
+    public String getDisctoc_tot()
+    {
+        return content.get("DISCTOC TOTAL");
+    }
+
+    public String getDisctoc_entries()
+    {
+        return content.get("DISCTOC ENTRIES");
     }
 
     public String getPath()
